@@ -197,27 +197,25 @@ reboot_dsl_modem() {
     reboot_device "$DSL_MODEM_PORT" "$off_time"
 }
 
-# If script is called directly
-if [ "${0##*/}" = "mikrotik-control.sh" ]; then
-    case "$1" in
-        "check")
-            check_mikrotik_connection
-            ;;
-        "status")
-            get_current_poe_status
-            ;;
-        "reboot")
-            reboot_dsl_modem "$2"
-            ;;
-        "enable")
-            enable_poe "$DSL_MODEM_PORT"
-            ;;
-        "disable")
-            disable_poe "$DSL_MODEM_PORT"
-            ;;
-        *)
-            echo "Usage: $0 {check|status|reboot [off_time]|enable|disable}"
-            exit 1
-            ;;
-    esac
-fi
+# Command line interface
+case "$1" in
+    "check")
+        check_mikrotik_connection
+        ;;
+    "status")
+        get_current_poe_status
+        ;;
+    "reboot")
+        reboot_dsl_modem "$2"
+        ;;
+    "enable")
+        enable_poe "$DSL_MODEM_PORT"
+        ;;
+    "disable")
+        disable_poe "$DSL_MODEM_PORT"
+        ;;
+    *)
+        echo "Usage: $0 {check|status|reboot [off_time]|enable|disable}"
+        exit 1
+        ;;
+esac
