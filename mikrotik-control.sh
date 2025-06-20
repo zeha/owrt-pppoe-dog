@@ -3,12 +3,26 @@
 # Mikrotik Switch PoE Control Script
 # Controls PoE power via SwOS Lite JSON API
 
+# Default configuration
 MIKROTIK_IP=""
 MIKROTIK_PASS=""
 DSL_MODEM_PORT="1"
 
-# shellcheck source=watchdog.conf
-. watchdog.conf
+# Try to load from config file
+SCRIPT_DIR="$(dirname "$0")"
+CONFIG_FILE="$SCRIPT_DIR/watchdog.conf"
+
+# Load configuration if exists
+# shellcheck source=/dev/null
+if [ -f "$CONFIG_FILE" ]; then
+    . "$CONFIG_FILE"
+fi
+
+# Also check system config location
+if [ -f "/etc/watchdog.conf" ]; then
+    # shellcheck source=/dev/null
+    . "/etc/watchdog.conf"
+fi
 
 # Get authentication token
 get_auth_token() {
