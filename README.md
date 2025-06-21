@@ -17,29 +17,49 @@ Automatic PPPoE connection monitoring and DSL modem reboot system for OpenWRT ro
 - `mikrotik-control.sh` - SwOS Lite PoE control via HTTP
 - `pppoe-watchdog.sh` - Main orchestration script
 - `watchdog.conf` - Configuration file
-- `pppoe-watchdog.init` - OpenWRT init script
-- `install.sh` - Installation script
+- `files/etc/config/pppoe-watchdog` - UCI configuration file
+- `files/etc/init.d/pppoe-watchdog` - OpenWRT init script
 
 ## Installation
 
-1. Upload all files to your OpenWRT router
-2. Run the installation script:
+### Option 1: Install Package (Recommended)
+```bash
+opkg install pppoe-watchdog_*.ipk
+```
+
+### Option 2: Manual Installation
+1. Upload script files to your OpenWrt router
+2. Copy to system locations:
    ```bash
-   chmod +x install.sh
-   ./install.sh
+   cp *.sh /usr/bin/
+   cp files/etc/init.d/pppoe-watchdog /etc/init.d/
+   cp files/etc/config/pppoe-watchdog /etc/config/
+   chmod +x /usr/bin/*.sh /etc/init.d/pppoe-watchdog
    ```
 
 ## Configuration
 
-Edit `/etc/watchdog.conf`:
-
+### UCI Configuration (Recommended)
 ```bash
-# Mikrotik Switch Settings
-MIKROTIK_IP="192.168.1.x"          # Your switch IP
-MIKROTIK_PASS="your_password"       # SwOS password  
-DSL_MODEM_PORT="1"                 # PoE port for modem
+# Enable the service
+uci set pppoe-watchdog.pppoe_watchdog.enabled='1'
 
-# Adjust other settings as needed
+# Configure Mikrotik switch
+uci set pppoe-watchdog.pppoe_watchdog.mikrotik_ip='192.168.1.x'
+uci set pppoe-watchdog.pppoe_watchdog.mikrotik_pass='your_password'
+uci set pppoe-watchdog.pppoe_watchdog.dsl_modem_port='1'
+
+# Optional: Adjust monitoring settings
+uci set pppoe-watchdog.pppoe_watchdog.check_interval='60'
+uci set pppoe-watchdog.pppoe_watchdog.max_failures='3'
+
+# Save configuration
+uci commit pppoe-watchdog
+```
+
+### View Current Configuration
+```bash
+uci show pppoe-watchdog
 ```
 
 ## Testing

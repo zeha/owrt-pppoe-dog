@@ -27,7 +27,7 @@ define Package/pppoe-watchdog/description
 endef
 
 define Package/pppoe-watchdog/conffiles
-/etc/watchdog.conf
+/etc/config/pppoe-watchdog
 endef
 
 define Build/Compile
@@ -41,10 +41,10 @@ define Package/pppoe-watchdog/install
 	$(INSTALL_BIN) ./pppoe-watchdog.sh $(1)/usr/bin/
 	
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./pppoe-watchdog.init $(1)/etc/init.d/pppoe-watchdog
+	$(INSTALL_BIN) ./files/etc/init.d/pppoe-watchdog $(1)/etc/init.d/pppoe-watchdog
 	
-	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) ./watchdog.conf $(1)/etc/
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/etc/config/pppoe-watchdog $(1)/etc/config/
 endef
 
 define Package/pppoe-watchdog/postinst
@@ -52,7 +52,10 @@ define Package/pppoe-watchdog/postinst
 # Enable service on installation
 [ -n "$${IPKG_INSTROOT}" ] || {
 	/etc/init.d/pppoe-watchdog enable
-	echo "PPPoE Watchdog installed. Configure /etc/watchdog.conf and start with:"
+	echo "PPPoE Watchdog installed. Configure with:"
+	echo "uci set pppoe-watchdog.pppoe_watchdog.enabled='1'"
+	echo "uci set pppoe-watchdog.pppoe_watchdog.mikrotik_ip='192.168.1.x'"
+	echo "uci commit pppoe-watchdog"
 	echo "/etc/init.d/pppoe-watchdog start"
 }
 endef

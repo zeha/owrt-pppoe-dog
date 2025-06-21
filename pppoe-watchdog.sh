@@ -17,11 +17,61 @@ MODEM_BOOT_TIME=300
 BACKOFF_MULTIPLIER=2
 INITIAL_BACKOFF=60
 
-# Load configuration if exists
-# shellcheck source=/dev/null
-if [ -f "$CONFIG_FILE" ]; then
-    . "$CONFIG_FILE"
-fi
+# Load configuration from UCI or fallback to config file
+load_config() {
+    # Try UCI first
+    if command -v uci >/dev/null 2>&1; then
+        local section="pppoe_watchdog"
+        
+        # Load from UCI config
+        MIKROTIK_IP=$(uci -q get pppoe-watchdog.${section}.mikrotik_ip)
+        MIKROTIK_PASS=$(uci -q get pppoe-watchdog.${section}.mikrotik_pass)
+        DSL_MODEM_PORT=$(uci -q get pppoe-watchdog.${section}.dsl_modem_port)
+        PPP_INTERFACE=$(uci -q get pppoe-watchdog.${section}.ppp_interface)
+        TEST_HOST=$(uci -q get pppoe-watchdog.${section}.test_host)
+        CHECK_INTERVAL=$(uci -q get pppoe-watchdog.${section}.check_interval)
+        MAX_FAILURES=$(uci -q get pppoe-watchdog.${section}.max_failures)
+        TIMEOUT=$(uci -q get pppoe-watchdog.${section}.timeout)
+        MAX_REBOOTS_PER_HOUR=$(uci -q get pppoe-watchdog.${section}.max_reboots_per_hour)
+        MAX_REBOOTS_PER_DAY=$(uci -q get pppoe-watchdog.${section}.max_reboots_per_day)
+        MODEM_BOOT_TIME=$(uci -q get pppoe-watchdog.${section}.modem_boot_time)
+        INITIAL_BACKOFF=$(uci -q get pppoe-watchdog.${section}.initial_backoff)
+        BACKOFF_MULTIPLIER=$(uci -q get pppoe-watchdog.${section}.backoff_multiplier)
+        LOG_FILE=$(uci -q get pppoe-watchdog.${section}.log_file)
+        
+        # Use defaults if UCI values are empty
+        [ -n "$DSL_MODEM_PORT" ] || DSL_MODEM_PORT="1"
+        [ -n "$PPP_INTERFACE" ] || PPP_INTERFACE="pppoe-wan"
+        [ -n "$TEST_HOST" ] || TEST_HOST="8.8.8.8"
+        [ -n "$CHECK_INTERVAL" ] || CHECK_INTERVAL="60"
+        [ -n "$MAX_FAILURES" ] || MAX_FAILURES="3"
+        [ -n "$TIMEOUT" ] || TIMEOUT="5"
+        [ -n "$MAX_REBOOTS_PER_HOUR" ] || MAX_REBOOTS_PER_HOUR="2"
+        [ -n "$MAX_REBOOTS_PER_DAY" ] || MAX_REBOOTS_PER_DAY="10"
+        [ -n "$MODEM_BOOT_TIME" ] || MODEM_BOOT_TIME="300"
+        [ -n "$INITIAL_BACKOFF" ] || INITIAL_BACKOFF="60"
+        [ -n "$BACKOFF_MULTIPLIER" ] || BACKOFF_MULTIPLIER="2"
+        [ -n "$LOG_FILE" ] || LOG_FILE="/var/log/pppoe-watchdog.log"
+    else
+        # Fallback to config file
+        SCRIPT_DIR="$(dirname "$0")"
+        CONFIG_FILE="$SCRIPT_DIR/watchdog.conf"
+        
+        # shellcheck source=/dev/null
+        if [ -f "$CONFIG_FILE" ]; then
+            . "$CONFIG_FILE"
+        fi
+        
+        # Also check system config location
+        if [ -f "/etc/watchdog.conf" ]; then
+            # shellcheck source=/dev/null
+            . "/etc/watchdog.conf"
+        fi
+    fi
+}
+
+# Load configuration
+load_config
 
 # State variables
 failure_count=0
