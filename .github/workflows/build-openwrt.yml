@@ -16,9 +16,6 @@ jobs:
       matrix:
         target:
           - "x86/64"
-          - "ramips/mt7621" 
-          - "ath79/generic"
-          - "bcm27xx/bcm2708"
     
     steps:
     - name: Checkout code
