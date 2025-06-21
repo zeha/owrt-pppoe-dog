@@ -52,23 +52,43 @@ jobs:
       uses: actions/cache@v4
       with:
         path: openwrt-sdk
-        key: openwrt-sdk-${{ steps.target.outputs.target }}-${{ hashFiles('.github/workflows/build-openwrt.yml') }}
+        key: openwrt-sdk-24.10-${{ steps.target.outputs.target }}-${{ hashFiles('.github/workflows/build-openwrt.yml') }}
         
     - name: Download OpenWrt SDK
       run: |
         TARGET_ARCH="${{ steps.target.outputs.target_arch }}"
         TARGET_SUBTARGET="${{ steps.target.outputs.target_subtarget }}"
         
-        # Use latest stable release (adjust version as needed)
-        OPENWRT_VERSION="23.05.2"
-        SDK_URL="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets/${TARGET_ARCH}/${TARGET_SUBTARGET}/openwrt-sdk-${OPENWRT_VERSION}-${TARGET_ARCH}-${TARGET_SUBTARGET}_gcc-12.3.0_musl.Linux-x86_64.tar.xz"
+        # Use latest stable release OpenWrt 24.10
+        OPENWRT_VERSION="24.10.0"
         
-        echo "Downloading SDK from: $SDK_URL"
-        wget -O sdk.tar.xz "$SDK_URL" || {
-          echo "Failed to download SDK for ${{ matrix.target }}"
-          echo "URL: $SDK_URL"
+        # Try different SDK filename patterns for OpenWrt 24.10
+        SDK_PATTERNS=(
+          "openwrt-sdk-${OPENWRT_VERSION}-${TARGET_ARCH}-${TARGET_SUBTARGET}_gcc-13.3.0_musl.Linux-x86_64.tar.xz"
+          "openwrt-sdk-${OPENWRT_VERSION}-${TARGET_ARCH}-${TARGET_SUBTARGET}_gcc-14.2.0_musl.Linux-x86_64.tar.xz"
+          "openwrt-sdk-${OPENWRT_VERSION}-${TARGET_ARCH}-${TARGET_SUBTARGET}.Linux-x86_64.tar.xz"
+        )
+        
+        SDK_DOWNLOADED=false
+        for SDK_PATTERN in "${SDK_PATTERNS[@]}"; do
+          SDK_URL="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets/${TARGET_ARCH}/${TARGET_SUBTARGET}/${SDK_PATTERN}"
+          echo "Trying SDK from: $SDK_URL"
+          
+          if wget -O sdk.tar.xz "$SDK_URL" 2>/dev/null; then
+            echo "Successfully downloaded SDK: $SDK_PATTERN"
+            SDK_DOWNLOADED=true
+            break
+          else
+            echo "Failed to download: $SDK_PATTERN"
+          fi
+        done
+        
+        if [ "$SDK_DOWNLOADED" = "false" ]; then
+          echo "Failed to download SDK for ${{ matrix.target }} with any pattern"
+          echo "Tried patterns:"
+          printf '%s\n' "${SDK_PATTERNS[@]}"
           exit 1
-        }
+        fi
         
         tar -xf sdk.tar.xz
         mv openwrt-sdk-* openwrt-sdk
