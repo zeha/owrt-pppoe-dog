@@ -26,6 +26,8 @@ load_config() {
         # Load from UCI config
         MIKROTIK_IP=$(uci -q get pppoe-watchdog.${section}.mikrotik_ip)
         export MIKROTIK_IP
+        MIKROTIK_USER=$(uci -q get pppoe-watchdog.${section}.mikrotik_user)
+        export MIKROTIK_USER
         MIKROTIK_PASS=$(uci -q get pppoe-watchdog.${section}.mikrotik_pass)
         export MIKROTIK_PASS
         DSL_MODEM_PORT=$(uci -q get pppoe-watchdog.${section}.dsl_modem_port)
@@ -42,6 +44,7 @@ load_config() {
         LOG_FILE=$(uci -q get pppoe-watchdog.${section}.log_file)
         
         # Use defaults if UCI values are empty
+        [ -n "$MIKROTIK_USER" ] || MIKROTIK_USER="admin"
         [ -n "$DSL_MODEM_PORT" ] || DSL_MODEM_PORT="1"
         [ -n "$PPP_INTERFACE" ] || PPP_INTERFACE="pppoe-wan"
         [ -n "$TEST_HOST" ] || TEST_HOST="8.8.8.8"

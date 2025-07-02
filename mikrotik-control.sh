@@ -38,7 +38,7 @@ swos_api_request() {
     local json_data="$1"
     
     # Use HTTP Digest Auth with admin username and configured password
-    local auth_user="admin"
+    local auth_user="${MIKROTIK_USER:-admin}"
     local auth_pass="${MIKROTIK_PASS}"
     
     curl -s --digest -u "$auth_user:$auth_pass" -X POST \
@@ -50,7 +50,7 @@ swos_api_request() {
 
 # Test authentication with SwOS
 swos_login() {
-    local auth_user="admin"
+    local auth_user="${MIKROTIK_USER:-admin}"
     local auth_pass="${MIKROTIK_PASS}"
     local response
     
@@ -88,7 +88,7 @@ check_mikrotik_connection() {
 # Get current PoE status
 get_current_poe_status() {
     local response
-    local auth_user="admin"
+    local auth_user="${MIKROTIK_USER:-admin}"
     local auth_pass="${MIKROTIK_PASS}"
     
     # Try different endpoints with HTTP Digest Auth
@@ -122,7 +122,7 @@ get_current_poe_status() {
 control_poe() {
     local port="$1"
     local action="$2"  # "on" or "off"
-    local auth_user="admin"
+    local auth_user="${MIKROTIK_USER:-admin}"
     local auth_pass="${MIKROTIK_PASS}"
     
     # SwOS uses form-based PoE control, not JSON

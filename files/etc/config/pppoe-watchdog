@@ -1,6 +1,7 @@
 config pppoe_watchdog
 	option enabled '0'
 	option mikrotik_ip ''
+	option mikrotik_user 'admin'
 	option mikrotik_pass ''
 	option dsl_modem_port '1'
 	option ppp_interface 'pppoe-wan'

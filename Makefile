@@ -60,6 +60,8 @@ define Package/pppoe-watchdog/postinst
 	echo "PPPoE Watchdog installed. Configure with:"
 	echo "uci set pppoe-watchdog.pppoe_watchdog.enabled='1'"
 	echo "uci set pppoe-watchdog.pppoe_watchdog.mikrotik_ip='192.168.1.x'"
+	echo "uci set pppoe-watchdog.pppoe_watchdog.mikrotik_user='admin'"
+	echo "uci set pppoe-watchdog.pppoe_watchdog.mikrotik_pass='your_password'"
 	echo "uci commit pppoe-watchdog"
 	echo "/etc/init.d/pppoe-watchdog start"
 }
