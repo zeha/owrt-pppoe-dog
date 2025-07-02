@@ -122,13 +122,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y shellcheck
         
-        # Run shellcheck on all shell scripts
+        # Run shellcheck on all shell scripts (OpenWrt uses ash/bash, not strict POSIX)
         echo "Running shellcheck on shell scripts..."
-        find . -name "*.sh" -type f -exec shellcheck -S warning {} \;
+        find . -name "*.sh" -type f -exec shellcheck -S warning -s bash {} \;
         
-        # Check init script
+        # Check init script (OpenWrt init scripts use ash)
         if [ -f "files/etc/init.d/pppoe-watchdog" ]; then
-          shellcheck -S warning files/etc/init.d/pppoe-watchdog
+          shellcheck -S warning -s ash files/etc/init.d/pppoe-watchdog
         fi
         
         echo "✓ Shellcheck passed"

@@ -25,7 +25,9 @@ load_config() {
         
         # Load from UCI config
         MIKROTIK_IP=$(uci -q get pppoe-watchdog.${section}.mikrotik_ip)
+        export MIKROTIK_IP
         MIKROTIK_PASS=$(uci -q get pppoe-watchdog.${section}.mikrotik_pass)
+        export MIKROTIK_PASS
         DSL_MODEM_PORT=$(uci -q get pppoe-watchdog.${section}.dsl_modem_port)
         PPP_INTERFACE=$(uci -q get pppoe-watchdog.${section}.ppp_interface)
         TEST_HOST=$(uci -q get pppoe-watchdog.${section}.test_host)
@@ -111,6 +113,7 @@ EOF
 reset_hourly_counters() {
     local current_hour
     local current_time
+    # shellcheck disable=SC2034
     current_hour=$(date +%H)
     current_time=$(date +%s)
     
@@ -124,6 +127,7 @@ reset_hourly_counters() {
 reset_daily_counters() {
     local current_day
     local current_time
+    # shellcheck disable=SC2034
     current_day=$(date +%j)
     current_time=$(date +%s)
     
@@ -138,12 +142,12 @@ check_reboot_limits() {
     reset_hourly_counters
     reset_daily_counters
     
-    if [ $reboot_count_hour -ge $MAX_REBOOTS_PER_HOUR ]; then
+    if [ $reboot_count_hour -ge "$MAX_REBOOTS_PER_HOUR" ]; then
         log_message "Hourly reboot limit reached ($reboot_count_hour/$MAX_REBOOTS_PER_HOUR)"
         return 1
     fi
     
-    if [ $reboot_count_day -ge $MAX_REBOOTS_PER_DAY ]; then
+    if [ $reboot_count_day -ge "$MAX_REBOOTS_PER_DAY" ]; then
         log_message "Daily reboot limit reached ($reboot_count_day/$MAX_REBOOTS_PER_DAY)"
         return 1
     fi
@@ -153,7 +157,7 @@ check_reboot_limits() {
 
 wait_for_modem_boot() {
     log_message "Waiting ${MODEM_BOOT_TIME}s for modem to boot..."
-    sleep $MODEM_BOOT_TIME
+    sleep "$MODEM_BOOT_TIME"
 }
 
 try_pppoe_restart() {
@@ -169,7 +173,7 @@ reboot_modem() {
     current_time=$(date +%s)
     
     # Check if enough time has passed since last reboot
-    if [ $((current_time - last_reboot_time)) -lt $current_backoff ]; then
+    if [ $((current_time - last_reboot_time)) -lt "$current_backoff" ]; then
         local wait_time=$((current_backoff - (current_time - last_reboot_time)))
         log_message "Backoff period active, waiting ${wait_time}s before next reboot attempt"
         return 1
@@ -223,7 +227,7 @@ main_loop() {
             
             if [ $failure_count -eq 2 ]; then
                 try_pppoe_restart
-            elif [ $failure_count -ge $MAX_FAILURES ]; then
+            elif [ $failure_count -ge "$MAX_FAILURES" ]; then
                 if reboot_modem; then
                     failure_count=0
                 fi
@@ -231,7 +235,7 @@ main_loop() {
         fi
         
         save_state
-        sleep $CHECK_INTERVAL
+        sleep "$CHECK_INTERVAL"
     done
 }
 
