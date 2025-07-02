@@ -170,7 +170,7 @@ jobs:
     - name: Build package
       working-directory: openwrt-sdk
       run: |
-        make package/pppoe-watchdog/compile V=s
+        make -j$(nproc) V=s package/pppoe-watchdog/compile
 
     - name: Validate IPK package
       run: |
@@ -261,6 +261,7 @@ jobs:
         mkdir -p artifacts
         find openwrt-sdk/bin -name "*pppoe-watchdog*" -type f -exec cp {} artifacts/ \;
         ls -la artifacts/
+        find artifacts > artifacts/index.txt
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
