@@ -1,3 +1,10 @@
+# Vibe coding warning
+
+This stuff is vibe-coded using Claude Code.
+It doesn't work.
+
+---
+
 # PPPoE Watchdog for OpenWRT
 
 Automatic PPPoE connection monitoring and DSL modem reboot system for OpenWRT routers.
