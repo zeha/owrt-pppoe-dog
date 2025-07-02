@@ -15,7 +15,7 @@ define Package/pppoe-watchdog
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=PPPoE connection watchdog with automatic modem reboot
-	DEPENDS:=+curl
+	EXTRA_DEPENDS:=+curl
 	PKGARCH:=all
 endef
 
