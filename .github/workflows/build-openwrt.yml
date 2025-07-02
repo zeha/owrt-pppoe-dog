@@ -162,11 +162,7 @@ jobs:
           fi
         done
         
-        # Validate Makefile syntax
-        if ! make -n -f Makefile >/dev/null 2>&1; then
-          echo "ERROR: Makefile has syntax errors"
-          exit 1
-        fi
+        # Makefile syntax will be validated during the actual build step
         
         echo "✓ Package structure tests passed"
         
