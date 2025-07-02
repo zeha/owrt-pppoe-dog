@@ -201,10 +201,12 @@ jobs:
         
         echo "Found IPK: $IPK_FILE"
         
-        # Check if IPK is a valid archive
-        if ! file "$IPK_FILE" | grep -q "Debian binary package"; then
-          echo "ERROR: IPK file is not a valid Debian package"
-          file "$IPK_FILE"
+        # Check if IPK is a valid archive (OpenWrt uses ar format)
+        echo "IPK file type:"
+        file "$IPK_FILE"
+        
+        if ! file "$IPK_FILE" | grep -qE "(ar archive|current ar archive)"; then
+          echo "ERROR: IPK file is not a valid ar archive"
           exit 1
         fi
         
@@ -213,38 +215,58 @@ jobs:
         cd ipk-test
         ar x "$IPK_FILE"
         
-        # Check for required files
-        if [ ! -f "control.tar.gz" ]; then
-          echo "ERROR: Missing control.tar.gz in IPK"
-          ls -la
+        # Check for required files (could be .gz, .xz, or .zst)
+        echo "IPK contents:"
+        ls -la
+        
+        # Look for control archive (various compression formats)
+        CONTROL_ARCHIVE=""
+        for ext in control.tar.gz control.tar.xz control.tar.zst; do
+          if [ -f "$ext" ]; then
+            CONTROL_ARCHIVE="$ext"
+            break
+          fi
+        done
+        
+        if [ -z "$CONTROL_ARCHIVE" ]; then
+          echo "ERROR: Missing control archive in IPK"
           exit 1
         fi
         
-        if [ ! -f "data.tar.gz" ]; then
-          echo "ERROR: Missing data.tar.gz in IPK"
-          ls -la
+        # Look for data archive (various compression formats)  
+        DATA_ARCHIVE=""
+        for ext in data.tar.gz data.tar.xz data.tar.zst; do
+          if [ -f "$ext" ]; then
+            DATA_ARCHIVE="$ext"
+            break
+          fi
+        done
+        
+        if [ -z "$DATA_ARCHIVE" ]; then
+          echo "ERROR: Missing data archive in IPK"
           exit 1
         fi
         
         # Extract and validate control files
-        tar -tf control.tar.gz | sort
+        echo "Control archive contents:"
+        tar -tf "$CONTROL_ARCHIVE" | sort
         
         # Extract and validate data files
-        echo "Package contents:"
-        tar -tf data.tar.gz | sort
+        echo "Data archive contents:"
+        tar -tf "$DATA_ARCHIVE" | sort
         
         # Verify expected files are present
-        if ! tar -tf data.tar.gz | grep -q "usr/bin/pppoe-watchdog.sh"; then
+        if ! tar -tf "$DATA_ARCHIVE" | grep -q "usr/bin/pppoe-watchdog.sh"; then
           echo "ERROR: Missing main script in package"
           exit 1
         fi
         
-        if ! tar -tf data.tar.gz | grep -q "etc/init.d/pppoe-watchdog"; then
+        if ! tar -tf "$DATA_ARCHIVE" | grep -q "etc/init.d/pppoe-watchdog"; then
           echo "ERROR: Missing init script in package"
           exit 1
         fi
         
-        if ! tar -tf data.tar.gz | grep -q "etc/config/pppoe-watchdog"; then
+        if ! tar -tf "$DATA_ARCHIVE" | grep -q "etc/config/pppoe-watchdog"; then
           echo "ERROR: Missing config file in package"
           exit 1
         fi
