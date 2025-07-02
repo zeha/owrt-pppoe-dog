@@ -8,7 +8,6 @@ PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Your Name <your.email@example.com>
 PKG_LICENSE:=GPL-2.0
-PKG_LICENSE_FILES:=
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -30,8 +29,14 @@ define Package/pppoe-watchdog/conffiles
 /etc/config/pppoe-watchdog
 endef
 
+define Build/Prepare
+	$(Build/Prepare/Default)
+endef
+
+define Build/Configure
+endef
+
 define Build/Compile
-	# Nothing to compile - shell scripts only
 endef
 
 define Package/pppoe-watchdog/install
@@ -44,7 +49,7 @@ define Package/pppoe-watchdog/install
 	$(INSTALL_BIN) ./files/etc/init.d/pppoe-watchdog $(1)/etc/init.d/pppoe-watchdog
 	
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) ./files/etc/config/pppoe-watchdog $(1)/etc/config/
+	$(INSTALL_CONF) ./files/etc/config/pppoe-watchdog $(1)/etc/config/pppoe-watchdog
 endef
 
 define Package/pppoe-watchdog/postinst

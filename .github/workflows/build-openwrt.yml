@@ -16,6 +16,7 @@ jobs:
       matrix:
         target:
           - "x86/64"
+          - "armsr/armv8"
     
     steps:
     - name: Checkout code
@@ -115,6 +116,67 @@ jobs:
         fi
         mv openwrt-sdk-* openwrt-sdk
         
+    - name: Lint shell scripts
+      run: |
+        # Install shellcheck
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+        
+        # Run shellcheck on all shell scripts
+        echo "Running shellcheck on shell scripts..."
+        find . -name "*.sh" -type f -exec shellcheck -S warning {} \;
+        
+        # Check init script
+        if [ -f "files/etc/init.d/pppoe-watchdog" ]; then
+          shellcheck -S warning files/etc/init.d/pppoe-watchdog
+        fi
+        
+        echo "✓ Shellcheck passed"
+        
+    - name: Test package structure
+      run: |
+        echo "Testing package structure..."
+        
+        # Check required files exist
+        for file in pppoe-monitor.sh mikrotik-control.sh pppoe-watchdog.sh; do
+          if [ ! -f "$file" ]; then
+            echo "ERROR: Missing required file: $file"
+            exit 1
+          fi
+          echo "✓ Found $file"
+        done
+        
+        # Check files directory structure
+        if [ ! -d "files/etc/init.d" ]; then
+          echo "ERROR: Missing files/etc/init.d directory"
+          exit 1
+        fi
+        
+        if [ ! -f "files/etc/init.d/pppoe-watchdog" ]; then
+          echo "ERROR: Missing init script"
+          exit 1
+        fi
+        
+        if [ ! -f "files/etc/config/pppoe-watchdog" ]; then
+          echo "ERROR: Missing config file"
+          exit 1
+        fi
+        
+        # Check shell scripts are executable
+        for script in *.sh; do
+          if [ ! -x "$script" ]; then
+            echo "WARNING: $script is not executable"
+          fi
+        done
+        
+        # Validate Makefile syntax
+        if ! make -n -f Makefile >/dev/null 2>&1; then
+          echo "ERROR: Makefile has syntax errors"
+          exit 1
+        fi
+        
+        echo "✓ Package structure tests passed"
+        
     - name: Prepare package
       run: |
         # Copy our package to the SDK
@@ -137,6 +199,68 @@ jobs:
       working-directory: openwrt-sdk
       run: |
         make package/pppoe-watchdog/compile V=s
+        
+    - name: Validate IPK package
+      run: |
+        # Find the generated IPK file
+        IPK_FILE=$(find openwrt-sdk/bin -name "*pppoe-watchdog*.ipk" -type f | head -1)
+        
+        if [ -z "$IPK_FILE" ]; then
+          echo "ERROR: No IPK file found"
+          exit 1
+        fi
+        
+        echo "Found IPK: $IPK_FILE"
+        
+        # Check if IPK is a valid archive
+        if ! file "$IPK_FILE" | grep -q "Debian binary package"; then
+          echo "ERROR: IPK file is not a valid Debian package"
+          file "$IPK_FILE"
+          exit 1
+        fi
+        
+        # Extract and validate package structure
+        mkdir -p ipk-test
+        cd ipk-test
+        ar x "$IPK_FILE"
+        
+        # Check for required files
+        if [ ! -f "control.tar.gz" ]; then
+          echo "ERROR: Missing control.tar.gz in IPK"
+          ls -la
+          exit 1
+        fi
+        
+        if [ ! -f "data.tar.gz" ]; then
+          echo "ERROR: Missing data.tar.gz in IPK"
+          ls -la
+          exit 1
+        fi
+        
+        # Extract and validate control files
+        tar -tf control.tar.gz | sort
+        
+        # Extract and validate data files
+        echo "Package contents:"
+        tar -tf data.tar.gz | sort
+        
+        # Verify expected files are present
+        if ! tar -tf data.tar.gz | grep -q "usr/bin/pppoe-watchdog.sh"; then
+          echo "ERROR: Missing main script in package"
+          exit 1
+        fi
+        
+        if ! tar -tf data.tar.gz | grep -q "etc/init.d/pppoe-watchdog"; then
+          echo "ERROR: Missing init script in package"
+          exit 1
+        fi
+        
+        if ! tar -tf data.tar.gz | grep -q "etc/config/pppoe-watchdog"; then
+          echo "ERROR: Missing config file in package"
+          exit 1
+        fi
+        
+        echo "✓ IPK package validation passed"
         
     - name: Collect artifacts
       run: |
