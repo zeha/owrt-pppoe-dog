@@ -120,7 +120,8 @@ jobs:
         # Copy our package to the SDK
         mkdir -p openwrt-sdk/package/pppoe-watchdog
         cp Makefile openwrt-sdk/package/pppoe-watchdog/
-        cp *.sh *.conf *.init openwrt-sdk/package/pppoe-watchdog/
+        cp *.sh openwrt-sdk/package/pppoe-watchdog/
+        cp -r files openwrt-sdk/package/pppoe-watchdog/
         
     - name: Configure SDK
       working-directory: openwrt-sdk
