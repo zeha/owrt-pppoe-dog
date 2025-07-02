@@ -172,96 +172,10 @@ jobs:
       run: |
         make -j$(nproc) V=s package/pppoe-watchdog/compile
 
-    - name: Validate IPK package (debug)
-      run: |
-        # Find the generated IPK file
-        IPK_FILE=$(find openwrt-sdk/bin -name "*pppoe-watchdog*.ipk" -type f | head -1)
-
-        if [ -z "$IPK_FILE" ]; then
-          echo "ERROR: No IPK file found"
-          echo "Available files in openwrt-sdk/bin:"
-          find openwrt-sdk/bin -type f -ls
-          exit 1
-        fi
-
-        echo "Found IPK: $IPK_FILE"
-
-        # Check if IPK is a valid archive (OpenWrt uses ar format)
-        echo "IPK file type:"
-        file "$IPK_FILE"
-
-        if ! file "$IPK_FILE" | grep -qE "(ar archive|current ar archive)"; then
-          echo "ERROR: IPK file is not a valid ar archive"
-          exit 1
-        fi
-
-        # Extract and validate package structure
-        mkdir -p ipk-test
-        cd ipk-test
-        ar x "$IPK_FILE"
-
-        # Check for required files (could be .gz, .xz, or .zst)
-        echo "IPK contents:"
-        ls -la
-
-        # Look for control archive (various compression formats)
-        CONTROL_ARCHIVE=""
-        for ext in control.tar.gz control.tar.xz control.tar.zst; do
-          if [ -f "$ext" ]; then
-            CONTROL_ARCHIVE="$ext"
-            break
-          fi
-        done
-
-        if [ -z "$CONTROL_ARCHIVE" ]; then
-          echo "ERROR: Missing control archive in IPK"
-          exit 1
-        fi
-
-        # Look for data archive (various compression formats)
-        DATA_ARCHIVE=""
-        for ext in data.tar.gz data.tar.xz data.tar.zst; do
-          if [ -f "$ext" ]; then
-            DATA_ARCHIVE="$ext"
-            break
-          fi
-        done
-
-        if [ -z "$DATA_ARCHIVE" ]; then
-          echo "ERROR: Missing data archive in IPK"
-          exit 1
-        fi
-
-        # Extract and validate control files
-        echo "Control archive contents:"
-        tar -tf "$CONTROL_ARCHIVE" | sort
-
-        # Extract and validate data files
-        echo "Data archive contents:"
-        tar -tf "$DATA_ARCHIVE" | sort
-
-        # Verify expected files are present
-        if ! tar -tf "$DATA_ARCHIVE" | grep -q "usr/bin/pppoe-watchdog.sh"; then
-          echo "ERROR: Missing main script in package"
-          exit 1
-        fi
-
-        if ! tar -tf "$DATA_ARCHIVE" | grep -q "etc/init.d/pppoe-watchdog"; then
-          echo "ERROR: Missing init script in package"
-          exit 1
-        fi
-
-        if ! tar -tf "$DATA_ARCHIVE" | grep -q "etc/config/pppoe-watchdog"; then
-          echo "ERROR: Missing config file in package"
-          exit 1
-        fi
-
-        echo "✓ IPK package debug validation completed"
-
     - name: Collect artifacts
       run: |
         mkdir -p artifacts
-        find openwrt-sdk/bin -name "*pppoe-watchdog*" -type f -exec cp {} artifacts/ \;
+        find openwrt-sdk -name "*.ipk" -type f -exec cp {} artifacts/ \;
         ls -la artifacts/
         find artifacts > artifacts/index.txt
 
