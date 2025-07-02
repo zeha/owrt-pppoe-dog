@@ -172,13 +172,15 @@ jobs:
       run: |
         make -j$(nproc) V=s package/pppoe-watchdog/compile
 
-    - name: Validate IPK package
+    - name: Validate IPK package (debug)
       run: |
         # Find the generated IPK file
         IPK_FILE=$(find openwrt-sdk/bin -name "*pppoe-watchdog*.ipk" -type f | head -1)
 
         if [ -z "$IPK_FILE" ]; then
           echo "ERROR: No IPK file found"
+          echo "Available files in openwrt-sdk/bin:"
+          find openwrt-sdk/bin -type f -ls
           exit 1
         fi
 
@@ -254,7 +256,7 @@ jobs:
           exit 1
         fi
 
-        echo "✓ IPK package validation passed"
+        echo "✓ IPK package debug validation completed"
 
     - name: Collect artifacts
       run: |
