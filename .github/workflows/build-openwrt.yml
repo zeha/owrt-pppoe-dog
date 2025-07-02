@@ -115,9 +115,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y shellcheck
         
-        # Run shellcheck on all shell scripts (OpenWrt uses ash/bash, not strict POSIX)
+        # Run shellcheck on our shell scripts only (exclude openwrt-sdk)
         echo "Running shellcheck on shell scripts..."
-        find . -name "*.sh" -type f -exec shellcheck -S warning -s bash {} \;
+        find . -name "*.sh" -type f -not -path "./openwrt-sdk/*" -exec shellcheck -S warning -s bash {} \;
         
         # Check init script (OpenWrt init scripts use ash)
         if [ -f "files/etc/init.d/pppoe-watchdog" ]; then
