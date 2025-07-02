@@ -21,7 +21,11 @@ INITIAL_BACKOFF=60
 load_config() {
     # Try UCI first
     if command -v uci >/dev/null 2>&1; then
+        # Try named section first, fall back to anonymous section
         local section="pppoe_watchdog"
+        if ! uci -q get pppoe-watchdog.${section} >/dev/null 2>&1; then
+            section="@pppoe_watchdog[0]"
+        fi
         
         # Load from UCI config
         MIKROTIK_IP=$(uci -q get pppoe-watchdog.${section}.mikrotik_ip)
